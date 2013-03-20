@@ -53,29 +53,48 @@ add_action( 'groups_created_group',  'cc_group_meta_form_save' );
 function parent_group_activity_aggregation ( $query_string, $object ) {
   global $bp;
 
-  //Check to see that we're in the BuddyPress groups component, not the member stream or other. Also check that this is an activity request, not the group directory.
-  if ( bp_is_group() && ( $object == 'activity' ) ) {
-    //Get the group id
-    $group_id = bp_get_group_id() ;
+	  //Check to see that we're in the BuddyPress groups component, not the member stream or other. Also check that this is an activity request, not the group directory.
+	  if ( bp_is_group() && ( $object == 'activity' ) ) {
+	    //Get the group id
+	    $group_id = bp_get_group_id() ;
 
-    //Check if this group is set to aggregate child group activity
-    if ( cc_group_custom_meta('group_use_aggregated_activity' ) == 'on' ) {
+	    //Check if this group is set to aggregate child group activity
+	    if ( cc_group_custom_meta('group_use_aggregated_activity' ) == 'on' ) {
 
-	    //Get the children of the current group
-	    $child_array = class_exists('BP_Groups_Hierarchy') ? BP_Groups_Hierarchy::has_children($group_id) : '' ;
-	    //has_children() returns an array of group ids or an empty array if no children are found
-	    $child_ids = implode( ',', $child_array );
-	    //attach the current group to the front of the list, if there are children, else return the parent only
-	    $primary_id = !empty($child_ids) ? $group_id . ',' . $child_ids : $group_id ; 
-	    
-	    //Finally, append the result to the query string. This works because bp_has_activities() allows a comma-separated list of ids as the primary_id argument.
-	    $query_string .= '&primary_id=' . $primary_id ;
-	}
-  }
+		    //Get the children of the current group
+		    $child_array = class_exists('BP_Groups_Hierarchy') ? BP_Groups_Hierarchy::has_children($group_id) : '' ;
+		    //has_children() returns an array of group ids or an empty array if no children are found
+		    if (!empty($child_array)) {
+				foreach ($child_array as $children) {
+					$next_gen = array(); //use this to run next loop?
+					$newgen = BP_Groups_Hierarchy::has_children($children);
+				    	if (!empty($newgen)) {
+						    $child_array = array_merge($child_array, $newgen);
+						    $next_gen = array_merge($next_gen, $newgen);
+						    if (!empty($next_gen)){
+							    foreach ($next_gen as $new_round) {
+					    			$newgen = BP_Groups_Hierarchy::has_children($new_round);
+								    $child_array = array_merge($child_array, $newgen);
+						    	}
+						    	//this is getting pretty ridiculous
+						    }
+						}
+				}
+
+		 	$child_ids = implode( ',', $child_array );
+
+		    //attach the current group to the front of the list, if there are children, else return the parent only
+		    $primary_id = !empty($child_ids) ? $group_id . ',' . $child_ids : $group_id ; 
+		    
+		    //Finally, append the result to the query string. This works because bp_has_activities() allows a comma-separated list of ids as the primary_id argument.
+		    $query_string .= '&primary_id=' . $primary_id ;
+	   		}//end if (!empty($child_array))
+
+	  }// End check for aggregation turned on
   
-  return $query_string;
+	return $query_string;
+	} // End check for bp groups component activity stream
 }
 add_filter( 'bp_ajax_querystring', 'parent_group_activity_aggregation', 99, 2 );
 }
 /* If you have code that does not need BuddyPress to run, then add it here. */
-
