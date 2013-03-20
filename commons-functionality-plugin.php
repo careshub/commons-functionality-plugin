@@ -83,8 +83,9 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 
 			$group_family = array_merge(array($group_id),$child_array);
 
-	    	// HACK: If the group is not a public group, all private subgroup activity will be shown. So we'll remove the groups from the array that the user doesn't belong to.
-			if ( 'public' != $bp->groups->current_group->status ) {
+	    	// HACK: If the group is not a public group, all private subgroup activity will be shown. So we'll remove the groups from the array that the user doesn't belong to, for non-moderator users.
+	    	// MAYBE TODO could use the user "scope" to resrict to user's groups intersected with family when in a private group with aggregated activity
+			if ( ( 'public' != $bp->groups->current_group->status ) && !bp_current_user_can( 'bp_moderate' ) ) {
 				$group_ids = BP_Groups_Member::get_group_ids( $bp->loggedin_user->id );
 				$group_family = array_intersect($group_family, $group_ids['groups']);
 			}
