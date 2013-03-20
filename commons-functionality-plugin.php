@@ -56,7 +56,7 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 	  //Check to see that we're in the BuddyPress groups component, not the member stream or other. Also check that this is an activity request, not the group directory.
 	  if ( bp_is_group() && ( $object == 'activity' ) ) {
 	    //Get the group id
-	    $group_id = bp_get_group_id() ;
+	    $group_id = $bp->groups->current_group->id ;
 
 	    //Check if this group is set to aggregate child group activity
 	    if ( cc_group_custom_meta('group_use_aggregated_activity' ) == 'on' ) {
@@ -81,10 +81,16 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 						}
 				}
 
-		 	$child_ids = implode( ',', $child_array );
+			$group_family = array_merge(array($group_id),$child_array);
+
+	    	// HACK: If the group is not a public group, all private subgroup activity will be shown. So we'll remove the groups from the array that the user doesn't belong to.
+			if ( 'public' != $bp->groups->current_group->status ) {
+				$group_ids = BP_Groups_Member::get_group_ids( $bp->loggedin_user->id );
+				$group_family = array_intersect($group_family, $group_ids['groups']);
+			}
 
 		    //attach the current group to the front of the list, if there are children, else return the parent only
-		    $primary_id = !empty($child_ids) ? $group_id . ',' . $child_ids : $group_id ; 
+		    $primary_id = implode( ',', $group_family ); 
 		    
 		    //Finally, append the result to the query string. This works because bp_has_activities() allows a comma-separated list of ids as the primary_id argument.
 		    $query_string .= '&primary_id=' . $primary_id ;
