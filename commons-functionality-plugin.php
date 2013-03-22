@@ -65,7 +65,8 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 		    $child_array = class_exists('BP_Groups_Hierarchy') ? BP_Groups_Hierarchy::has_children($group_id) : '' ;
 		    //has_children() returns an array of group ids or an empty array if no children are found
 		    if (!empty($child_array)) {
-				foreach ($child_array as $children) {
+				
+	    	foreach ($child_array as $children) {
 					$next_gen = array(); //use this to run next loop?
 					$newgen = BP_Groups_Hierarchy::has_children($children);
 				    	if (!empty($newgen)) {
@@ -99,9 +100,10 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 
 	  }// End check for aggregation turned on
   
-	return $query_string;
 	} // End check for bp groups component activity stream
+	return $query_string;
 }
 add_filter( 'bp_ajax_querystring', 'parent_group_activity_aggregation', 99, 2 );
+
 }
 /* If you have code that does not need BuddyPress to run, then add it here. */
