@@ -152,9 +152,7 @@ function bp_add_map_pane_init() {
 // 	3. Add custom group home pages (requires template modifications, too)
 //////////////////////
 //////////////////////
-add_action( 'bp_init', 'bp_add_group_activity_tab_init' );
-
-function bp_add_group_activity_tab_init() {
+add_action( 'bp_actions', 'add_group_activity_tab', 8 );
 
 function add_group_activity_tab() {
 	  global $bp;
@@ -200,10 +198,6 @@ function add_group_activity_tab() {
 	    } // END if( $custom_front_query->have_posts() )
 	  } //END if( bp_is_group() )
 	}
-	 
-	// add_action( 'bp_actions', 'add_group_activity_tab', 8 );
-
-} //END bp_add_group_activity_tab_init()
 
 //Generate Group Home Page custom post type to populate group home pages
 add_action( 'init', 'register_cpt_group_home_page' );
