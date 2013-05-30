@@ -21,9 +21,9 @@ Author: David Cavins
 //////////////////////
 
 // Always attach functions that require BuddyPress to run to bp_init or bp_loaded
-add_action( 'bp_init', 'bp_group_meta_init' );
+add_action( 'bp_init', 'cc_group_meta_init' );
 
-function bp_group_meta_init() {
+function cc_group_meta_init() {
 	
 	function cc_group_custom_meta( $meta_key = '' ) {
 	//get current group id and load meta_key value if passed. If not pass it blank
@@ -59,7 +59,7 @@ add_action( 'groups_created_group',  'cc_group_meta_form_save' );
 
 //Filtering the activity stream for parent groups that are set to include child group activity
 
-function parent_group_activity_aggregation ( $query_string, $object ) {
+function cc_parent_group_activity_aggregation ( $query_string, $object ) {
   global $bp;
 
 	  //Check to see that we're in the BuddyPress groups component, not the member stream or other. Also check that this is an activity request, not the group directory.
@@ -112,15 +112,15 @@ function parent_group_activity_aggregation ( $query_string, $object ) {
 	} // End check for bp groups component activity stream
 	return $query_string;
 }
-add_filter( 'bp_ajax_querystring', 'parent_group_activity_aggregation', 99, 2 );
+add_filter( 'bp_ajax_querystring', 'cc_parent_group_activity_aggregation', 99, 2 );
 }
 
 // 	2. Add maps & reports pane to groups (not finished)
 //////////////////////
 //////////////////////
-// add_action( 'bp_init', 'bp_add_map_pane_init' );
+// add_action( 'bp_init', 'cc_add_group_map_pane_init' );
 
-function bp_add_map_pane_init() {
+function cc_add_group_map_pane_init() {
 	global $bp;
 	
 	bp_core_new_subnav_item( array(
@@ -147,14 +147,14 @@ function bp_add_map_pane_init() {
 	        // page content goes here
 	}
 
-} // End bp_add_map_pane_init()
+} // End cc_add_group_map_pane_init()
 
 // 	3. Add custom group home pages (requires template modifications, too)
 //////////////////////
 //////////////////////
-add_action( 'bp_actions', 'add_group_activity_tab', 8 );
+add_action( 'bp_actions', 'cc_add_group_activity_tab', 8 );
 
-function add_group_activity_tab() {
+function cc_add_group_activity_tab() {
 	  global $bp;
 	  // Only check if we're on a group page
 	  if( bp_is_group() ) { 
@@ -246,26 +246,26 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	//Add meta box to Group Home Page custom post type to associate posts with the group home page
 
 	/* Fire our meta box setup function on the post editor screen. */
-	add_action( 'load-post.php', 'group_home_meta_boxes_setup' );
-	add_action( 'load-post-new.php', 'group_home_meta_boxes_setup' );
+	add_action( 'load-post.php', 'cc_group_home_meta_boxes_setup' );
+	add_action( 'load-post-new.php', 'cc_group_home_meta_boxes_setup' );
 
 	/* Meta box setup function. */
-	function group_home_meta_boxes_setup() {
+	function cc_group_home_meta_boxes_setup() {
 
 	  /* Add meta boxes on the 'add_meta_boxes' hook. */
-	  add_action( 'add_meta_boxes', 'add_group_home_meta_boxes' );
+	  add_action( 'add_meta_boxes', 'cc_add_group_home_meta_boxes' );
 
 	  /* Save post meta on the 'save_post' hook. */
-	  add_action( 'save_post', 'save_group_home_meta', 10, 2 );
+	  add_action( 'save_post', 'cc_save_group_home_meta', 10, 2 );
 	}
 
 	/* Create one or more meta boxes to be displayed on the group home page editor screen. */
-	function add_group_home_meta_boxes() {
+	function cc_add_group_home_meta_boxes() {
 
 	  add_meta_box(
 	    'group-home-page-association',      // Unique ID
 	    esc_html__( 'Groups to Use this Home Page', 'group-home-page' ),    // Title
-	    'group_home_page_meta_box',   // Callback function
+	    'cc_group_home_page_meta_box',   // Callback function
 	    'group_home_page',         // Admin page (or post type)
 	    'normal',         // Context
 	    'default'         // Priority
@@ -273,7 +273,7 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	}
 
 	/* Display the post meta box. */
-	function group_home_page_meta_box( $object, $box ) { ?>
+	function cc_group_home_page_meta_box( $object, $box ) { ?>
 
 	  <?php wp_nonce_field( basename( __FILE__ ), 'group_home_association_nonce' ); ?>
 	<!-- Loop through Group Tree with the addition of checkboxes -->
@@ -298,7 +298,7 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	}
 
 	/* Save the meta box's post metadata. */
-	function save_group_home_meta( $post_id, $post ) {
+	function cc_save_group_home_meta( $post_id, $post ) {
 
 	  /* Verify the nonce before proceeding. */
 	  if ( !isset( $_POST['group_home_association_nonce'] ) || !wp_verify_nonce( $_POST['group_home_association_nonce'], basename( __FILE__ ) ) )
