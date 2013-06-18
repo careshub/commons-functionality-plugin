@@ -115,40 +115,6 @@ function cc_parent_group_activity_aggregation ( $query_string, $object ) {
 add_filter( 'bp_ajax_querystring', 'cc_parent_group_activity_aggregation', 99, 2 );
 }
 
-// 	2. Add maps & reports pane to groups (not finished)
-//////////////////////
-//////////////////////
-// add_action( 'bp_init', 'cc_add_group_map_pane_init' );
-
-function cc_add_group_map_pane_init() {
-	global $bp;
-	
-	bp_core_new_subnav_item( array(
-	   'name' => 'My Group Page',
-	   'slug' => 'my-group-page',
-	   'parent_url' => $bp->loggedin_user->domain . $bp->groups->slug . '/',
-	   'parent_slug' => $bp->groups->slug,
-	   'screen_function' => 'my_groups_page_function_to_show_screen',
-	   'position' => 40 ) );
-
-	function my_groups_page_function_to_show_screen() {
-
-	    //add title and content here - last is to call the members plugin.php template
-	    // add_action( 'bp_template_title', 'my_groups_page_function_to_show_screen_title' );
-	    add_action( 'bp_template_content', 'my_groups_page_function_to_show_screen_content' );
-	    bp_core_load_template( apply_filters( 'bp_core_template_plugin', 'members/single/plugins' ) );
-	}
-
-	function my_groups_page_function_to_show_screen_title() {
-	        echo 'My Page Title';
-	}
-	function my_groups_page_function_to_show_screen_content() { 
-
-	        // page content goes here
-	}
-
-} // End cc_add_group_map_pane_init()
-
 // 	3. Add custom group home pages (requires template modifications, too)
 //////////////////////
 //////////////////////
@@ -311,7 +277,12 @@ add_action( 'init', 'register_cpt_group_home_page' );
 	  if ( !current_user_can( $post_type->cap->edit_post, $post_id ) )
 	    return $post_id;
 
-	  if (!empty($_POST['group_home_page_association']) && is_array($_POST['group_home_page_association'])) {
+	  if ( empty($_POST['group_home_page_association']) ) {
+			//If this element of POST is empty, then we should delete any stored values if they exist
+	        delete_post_meta($post_id, 'group_home_page_association');
+	    }
+
+	  if ( !empty($_POST['group_home_page_association']) && is_array($_POST['group_home_page_association']) ) {
 	        delete_post_meta($post_id, 'group_home_page_association');
 	        foreach ($_POST['group_home_page_association'] as $association) {
 	            add_post_meta($post_id, 'group_home_page_association', $association);
