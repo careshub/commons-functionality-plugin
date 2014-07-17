@@ -341,19 +341,13 @@ class CC_Functionality_BP_Dependent_Extras {
 	/**
 	 * 1c. Change group "Request membership" button behavior-- always redirect to request membership pane, no AJAX requests.
 	 *
-	 * @since    0.1.0
+	 * @since    0.1.1
 	 */
 	public function request_membership_redirect( $button ) {
 		// To prevent buddypress.js from acting on the request membership button click, we'll need to remove the class .group-button from the button wrapper. See buddypress.js line 1252.
 
-		if ( $button[ 'id' ] == 'request_membership'  ) {
-			$towrite = PHP_EOL . '$button, before mod: ' . print_r($button, TRUE);
+		if ( $button[ 'id' ] == 'request_membership' )
 			$button[ 'wrapper_class' ] = str_replace( 'group-button', '', $button[ 'wrapper_class' ] );
-			$towrite .= PHP_EOL . '$button, after mod: ' . print_r($button, TRUE);
-			$fp = fopen('group_action_buttons.txt', 'a');
-			fwrite($fp, $towrite);
-			fclose($fp);
-		}
 
 		return $button;
 	}
