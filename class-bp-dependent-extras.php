@@ -71,6 +71,9 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 		b. Restrict who can create groups and in what circumstances.
 				// This is handled by setting bp_group_hierarchy's setting to "no one can create top-level group"
 				// Then, if a user tries to access groups/create and cannot create subgroups, they'll get bounced.
+		// 		c. Change group "Request membership" button behavior
+				add_filter( 'bp_get_group_join_button', array( $this, 'request_membership_redirect' )  );
+
 
 		// 	2. BuddyPress Docs behavior changes
 		//		a. Change default access settings to "group-members" if a group is associated with a doc.
@@ -334,6 +337,27 @@ class CC_Functionality_BP_Dependent_Extras {
 	 * @since    0.1.0
 	 */
 	// No function needed. Handled by bp-group-hierarchy settings.
+
+	/**
+	 * 1c. Change group "Request membership" button behavior-- always redirect to request membership pane, no AJAX requests.
+	 *
+	 * @since    0.1.0
+	 */
+	public function request_membership_redirect( $button ) {
+		// To prevent buddypress.js from acting on the request membership button click, we'll need to remove the class .group-button from the button wrapper. See buddypress.js line 1252.
+
+		if ( $button[ 'id' ] == 'request_membership'  ) {
+			$towrite = PHP_EOL . '$button, before mod: ' . print_r($button, TRUE);
+			$button[ 'wrapper_class' ] = str_replace( 'group-button', '', $button[ 'wrapper_class' ] );
+			$towrite .= PHP_EOL . '$button, after mod: ' . print_r($button, TRUE);
+			$fp = fopen('group_action_buttons.txt', 'a');
+			fwrite($fp, $towrite);
+			fclose($fp);
+		}
+
+		return $button;
+	}
+
 
 	/* 2. BuddyPress Docs behavior changes
 	*****************************************************************************/

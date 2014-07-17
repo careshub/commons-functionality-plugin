@@ -2,12 +2,12 @@
 /*
 Plugin Name: CC Functionality
 Description: Adds functionality that is not theme dependent
-Version: 0.1.0
+Version: 0.1.1
 License: GPLv3
 Author: David Cavins
 */
 
-define( 'CC_FUNCTIONALITY_PLUGIN_VERSION', '0.1.0' );
+define( 'CC_FUNCTIONALITY_PLUGIN_VERSION', '0.1.1' );
 
 /**
  * Creates instance of CC_Functionality_BP_Dependent_Extras
