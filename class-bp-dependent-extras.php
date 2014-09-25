@@ -73,6 +73,8 @@ class CC_Functionality_BP_Dependent_Extras {
 				// Then, if a user tries to access groups/create and cannot create subgroups, they'll get bounced.
 		// 		c. Change group "Request membership" button behavior
 				add_filter( 'bp_get_group_join_button', array( $this, 'request_membership_redirect' )  );
+		//		d. Add more information to the group invites screen
+				add_action( 'bp_group_send_invites_item', array( $this, 'add_invitation_meta' ) );
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -87,6 +89,12 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
 				add_filter('bp_group_hierarchy_subgroup_permission_options', array( $this, 'group_hierarchy_creators_default_option' ), 17, 2);
 
+				// Break the-content filter
+				// add_action( 'wp_init', array($this, 'bust_formatting'), 1 );
+
+		// 4. BuddyPress Group Email Subscription changes
+			// Don't show the group email digest subscription nav item 
+			add_filter( 'bp_group_email_subscription_enable_nav_item', array( $this, 'disable_bpge_nav_item' ) );
 
 
 	}
@@ -351,7 +359,26 @@ class CC_Functionality_BP_Dependent_Extras {
 
 		return $button;
 	}
+	/**
+	 * 1d. Add more information to the group invites screen
+	 *
+	 * @since    0.1.2
+	 */
+	public function add_invitation_meta(){
+		global $invites_template;
+		$invite = $invites_template->invite;
+		// echo '<pre>';
+		// var_dump( $invites_template->invite );
+		// echo '</pre>';
+		$invite_sent = $invites_template->invite->user->invite_sent;
+		if ( $invite_sent ) {
+			$invited_date = date( "m-d-Y", strtotime( $invites_template->invite->user->date_modified ) );
+			echo '<br /><span class="invite-status meta">Invited ' . $invited_date . '</span>';
+		} else {
+			echo '<br /><span class="invite-status meta alert">Invitation has not yet been sent.</span>';
+		}
 
+	}
 
 	/* 2. BuddyPress Docs behavior changes
 	*****************************************************************************/
@@ -431,6 +458,13 @@ class CC_Functionality_BP_Dependent_Extras {
 	    return $new_options;
 	}
 
+	/* 4. BuddyPress Group Email Subscription changes
+	*****************************************************************************/
+		// Don't show the group email digest subscription nav item
+
+	public function disable_bpge_nav_item( $enable_nav_item ) {
+		return false;
+	}
 
 
 	// UTILITY FUNCTIONS
@@ -446,4 +480,8 @@ class CC_Functionality_BP_Dependent_Extras {
 		return $wpdb->get_var( $wpdb->prepare( "SELECT g.parent_id FROM {$bp->groups->table_name} g WHERE g.id = %d", $group_id ) );
 	}
 
+	public function bust_formatting(){
+		// remove_all_shortcodes();
+		remove_filter( 'the_content', 'do_shortcode' );
+	}
 }
