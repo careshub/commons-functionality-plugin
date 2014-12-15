@@ -20,7 +20,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '0.1.0';
+	const VERSION = '0.1.5';
 
 	/**
 	 *
@@ -75,6 +75,10 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_filter( 'bp_get_group_join_button', array( $this, 'request_membership_redirect' )  );
 		//		d. Add more information to the group invites screen
 				add_action( 'bp_group_send_invites_item', array( $this, 'add_invitation_meta' ) );
+		// 		e. Use wp_editor for the activity post_form and dump the media-adding plugin, as it's broken as of BP 2.1.
+				// add_action( 'whats_new_textarea', array( $this, 'post_form_wp_editor' ) );
+		// 		f. Don't show new site and group memberships on activity stream default view
+				add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'activity_querystring_limit_types' ), 10, 7 );
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -84,18 +88,53 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_filter('bp_docs_force_enable_at_group_creation', array( $this, 'disable_bp_docs_create_step' ), 12, 1);
 		//		c. If this is a new child group, we'll set up BP docs to match the parent group's setup. This step copies the parent group's attributes over to the child group.
 				add_filter('bp_docs_default_group_settings', array( $this, 'bp_docs_default_settings_for_child_groups' ), 12, 2);
+		//		d. Allow comment functionality on BP Docs.
+				// add_filter('bp_docs_allow_comment_section', array( $this, 'bp_docs_allow_comments' ), 12, 2);
 
 		//	3. BP Group Hierarchy behavior changes
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
 				add_filter('bp_group_hierarchy_subgroup_permission_options', array( $this, 'group_hierarchy_creators_default_option' ), 17, 2);
+				// The component name messes up BuddyPress's string generator, so it doesn't get translated
+				add_filter( 'bp_get_search_default_text', array( $this, 'groups_dir_search_placeholder_text' ), 12, 2 );
+
+		//		c. Don't show the "Hublets" tab to non-logged-in or non-member visitors
+				add_filter('bp_group_hierarchy_show_member_groups', array( $this, 'group_hierarchy_hublet_tab_visibility' ) );
 
 				// Break the-content filter
 				// add_action( 'wp_init', array($this, 'bust_formatting'), 1 );
 
 		// 4. BuddyPress Group Email Subscription changes
-			// Don't show the group email digest subscription nav item 
+			// Don't show the group email digest subscription nav item
 			add_filter( 'bp_group_email_subscription_enable_nav_item', array( $this, 'disable_bpge_nav_item' ) );
+			add_filter( 'ass_digest_format_item', array( $this, 'bpge_strip_shortcodes' ) );
+			add_filter( 'bp_ass_activity_notification_message', array( $this, 'bpge_strip_shortcodes_not_digest' ) );
 
+
+
+		// 5. Invite Anyone behavior changes
+			// Don't render the directory on the group invites page
+			// Invite Anyone uses a check on the number of users to decide if it should build the list of users with checkboxes on the group's "send invites" page. The list is too long for us, but under WP's definition of a large network. So we filter the result to true.
+			add_filter( 'invite_anyone_is_large_network', array( $this, 'change_ia_large_network_value' ), 22, 2 );
+
+		// 6. Relevanssi behavior changes
+			// This prevents relevanssi from breaking our archive searches
+			// For BP Docs, Help articles, SA stuff
+			add_filter('relevanssi_prevent_default_request', array( $this, 'stop_relevanssi_on_archives' ) );
+
+		// 7. Gravity Forms changes
+			// Always add the user ID as entry meta
+			// add_filter( 'gform_entry_meta', array( $this, 'cc_gf_entry_add_user_id' ), 10, 2);
+
+		// 8. WangGuard modifications
+			// Add "about me" to the user row. Helps to ID spammers.
+			add_filter( 'wg_users_table_info_cell', array( $this, 'wg_after_info_about_me' ), 10, 3 );
+
+
+		// Testing
+			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
+			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
+			// add_action( 'bp_include', array( $this, 'trap_component_at_include' ), 88 );
+			// add_action( 'init', array( $this, 'trap_component_at_init' ), 9 );
 
 	}
 
@@ -380,6 +419,97 @@ class CC_Functionality_BP_Dependent_Extras {
 
 	}
 
+	/**
+	 * 1e. Use wp_editor for the activity post_form and dump the media-adding plugin, as it's broken as of BP 2.1.
+	 *
+	 * @since    0.1.3
+	 */
+	public function post_form_wp_editor() {
+		// deactivation of the visual tab, so user can't play with template styles
+		add_filter ( 'user_can_richedit' , create_function( '$a' , 'return false;' ), 50 );
+
+		if ( isset( $_GET['r'] ) )
+			$content = esc_textarea( $_GET['r'] );
+
+		// adding tinymce tools
+		$editor_id = 'whats-new';
+		$settings = array(
+			'textarea_name' => 'whats-new',
+			'teeny' => true,
+			'media_buttons' => true,
+			'drag_drop_upload' => true,
+			'quicktags' => array(
+				'buttons' => 'strong,em,link,img'
+				)
+			);
+
+		// get the editor
+		wp_editor( $content, $editor_id, $settings );
+	}
+
+	/**
+	 * 1f. Don't show new site and group memberships on activity stream default view
+	 *
+	 * @since    0.1.4
+	 */
+	public function activity_querystring_limit_types( $query_string, $object, $object_filter, $object_scope, $object_page, $object_search_terms, $object_extras ){
+		// $towrite = PHP_EOL . '$query_string: ' . print_r($query_string, TRUE);
+		// $towrite .= PHP_EOL . '$object: ' . print_r($object, TRUE);
+		// $towrite .= PHP_EOL . '$object_filter: ' . print_r($object_filter, TRUE);
+		// $towrite .= PHP_EOL . '$object_scope: ' . print_r($object_scope, TRUE);
+		// $towrite .= PHP_EOL . '$object_page: ' . print_r($object_page, TRUE);
+		// $towrite .= PHP_EOL . '$object_search_terms: ' . print_r($object_search_terms, TRUE);
+		// $towrite .= PHP_EOL . '$object_extras: ' . print_r($object_extras, TRUE);
+		// $towrite .= PHP_EOL . 'is groups activity? ' . print_r( bp_is_group() , TRUE);
+		// $towrite .= PHP_EOL . 'is activity directory? ' . print_r( bp_is_activity_directory() , TRUE);
+
+		// Is this the default activity view?
+		if ( $object == 'activity' && ( $object_scope == 'all' || empty( $object_scope ) ) && ( $object_filter == -1 || empty( $object_filter ) ) ) {
+			$args = array();
+			if ( bp_is_activity_directory() ) {
+				// From main activity directory, exclude profile updates, new memberships
+				// component is now 'xprofile' used to be 'profile' before Oct 2013. We'll just find the recent items.
+				$args = array(
+					'page' => 1,
+					'per_page' => 200,
+					'filter' => array( 'object' => 'xprofile' ),
+					);
+			} else if ( bp_is_group() ) {
+				// In the groups directory, we want to hide the "joined group" items.
+				$args = array(
+					'filter' => array(
+						'action' => 'joined_group',
+						'primary_id' => bp_get_current_group_id()
+					),
+				);
+			}
+
+			if ( ! empty( $args ) ) {
+				$items_to_exclude = bp_activity_get( $args );
+				//array_column is PHP 5.5+ :(
+				// $ids_to_exclude = array_column( $items_to_exclude['activities'], 'id' );
+				$ids_to_exclude = array();
+				foreach ($items_to_exclude['activities'] as $item) {
+					$ids_to_exclude[] = $item->id;
+				}
+				$ids_to_exclude = implode( ',', $ids_to_exclude );
+
+				if ( $ids_to_exclude ) {
+					$query_string .= '&exclude=' . $ids_to_exclude;
+				}
+			}
+
+		}
+		// $towrite .= PHP_EOL . '$args: ' . print_r($args, TRUE);
+		// $towrite .= PHP_EOL . '$modded qs: ' . print_r($query_string, TRUE);
+		// $towrite .= PHP_EOL . '------------------';
+		// $fp = fopen('bp_legacy_theme_ajax_querystring.txt', 'a');
+		// fwrite($fp, $towrite);
+		// fclose($fp);
+
+		return $query_string;
+	}
+
 	/* 2. BuddyPress Docs behavior changes
 	*****************************************************************************/
 	/**
@@ -388,12 +518,12 @@ class CC_Functionality_BP_Dependent_Extras {
 	 * @since    0.1.0
 	 */
 	function mod_bp_docs_access_defaults_for_groups( $doc_settings, $doc_id, $default_settings ) {
-	  // A refresh_access_settings AJAX request is fired after the page loads. 
+	  // A refresh_access_settings AJAX request is fired after the page loads.
 	  // We'll apply our new defaults if a group id is passed as part of the request.
 	  if ( ( defined('DOING_AJAX') && DOING_AJAX ) && ( isset( $_POST['group_id'] ) && $_POST['group_id'] ) ) {
 	    if ( $doc_settings == $default_settings ) {
 	      foreach ($doc_settings as $key=>$setting) {
-	        $doc_settings[$key] = 'group-members';    
+	        $doc_settings[$key] = 'group-members';
 	      }
 	    }
 	  }
@@ -420,8 +550,8 @@ class CC_Functionality_BP_Dependent_Extras {
 	}
 
 	/**
-	 * 2c. If this new group is a child group of another group, we'll set up BP docs to match the parent group's setup. 
-	 * This step copies the parent group's attributes over to the child group. 
+	 * 2c. If this new group is a child group of another group, we'll set up BP docs to match the parent group's setup.
+	 * This step copies the parent group's attributes over to the child group.
 	 * This filter is only called if disable_bp_docs_create_step() returns true, above.
 	 *
 	 * @since    0.1.0
@@ -429,12 +559,21 @@ class CC_Functionality_BP_Dependent_Extras {
 	public function bp_docs_default_settings_for_child_groups( $settings, $group_id ) {
 	    if ( $parent_id = $this->get_parent_id( $group_id ) ) {
 		    $parent_settings = groups_get_groupmeta( $parent_id, 'bp-docs');
-		    
+
 		    if ( !empty( $parent_settings ) ) {
 		      $settings = $parent_settings;
 		    }
 	    }
 	  return $settings;
+	}
+
+	/**
+	 * 2d. Allow comment functionality on BP Docs.
+	 *
+	 * @since    0.1.1
+	 */
+	public function bp_docs_allow_comments( $setting ) {
+	  return true;
 	}
 
 	/* 3. BP Group Hierarchy behavior changes
@@ -458,12 +597,183 @@ class CC_Functionality_BP_Dependent_Extras {
 	    return $new_options;
 	}
 
+	// Groups Hierarchy filters the value of the groups directory search box placeholder, so our language file doesn't take effect. So we re-filter it.
+	public function groups_dir_search_placeholder_text( $default_text, $component ) {
+
+		if ( $component == 'groups' || $component == 'tree' )
+			$default_text = 'Search Hubs...';
+
+		return $default_text;
+	}
+
+	/**
+	 * 3c. Don't show the "Hublets" tab to non-logged-in or non-member visitors
+	 *
+	 * @since    0.1.5
+	 */
+	function group_hierarchy_hublet_tab_visibility( $show_tab ) {
+		if ( ! $user_id = get_current_user_id() ) {
+			return false;
+		}
+
+		if ( ! groups_is_user_member( $user_id, bp_get_current_group_id() ) ) {
+			return false;
+		}
+
+	    return $show_tab;
+	}
+
 	/* 4. BuddyPress Group Email Subscription changes
 	*****************************************************************************/
 		// Don't show the group email digest subscription nav item
 
 	public function disable_bpge_nav_item( $enable_nav_item ) {
 		return false;
+	}
+
+	// This removes shortcodes added by the add-photos-to-activity plugin.
+	public function bpge_strip_shortcodes( $item ) {
+		$item = strip_shortcodes( $item );
+
+		return $item;
+
+	}
+	// It appears that if the message is sent immediately, it requires a different filter.
+	public function bpge_strip_shortcodes_not_digest( $message, $message_array ) {
+		return strip_shortcodes( $message );
+	}
+
+
+	// 5. Invite Anyone behavior changes
+	// Don't render the directory on the group invites page
+	function change_ia_large_network_value( $is_large, $count ) {
+	  return true;
+	}
+
+	// 6. Relevanssi behavior changes
+		// This prevents relevanssi from breaking our archive searches
+		// For BP Docs, Help articles, SA stuff
+	public function stop_relevanssi_on_archives( $prevent ) {
+		if ( is_post_type_archive() || is_page( 'salud-america/search-results' ) || is_page( 'groups' ) )
+		    $prevent = false;
+
+		return $prevent;
+	}
+
+	// 7. Gravity Forms changes
+		// Always add the user ID as entry meta
+	public function cc_gf_entry_add_user_id( $entry_meta, $form_id ){
+		//data will be stored with the meta key 'user_id'
+		//label - displayed as the column header
+		//is_numeric - used when sorting the entry list, indicates whether the data should be treated as numeric when sorting
+		//is_default_column - when set to true automatically adds the column to the entry list, without having to edit and add the column for display
+		//update_entry_meta_callback - indicates what function to call to update the entry meta upon form submission or editing an entry
+	    $entry_meta['user_id'] = array(
+	        'label' => 'User ID',
+	        'is_numeric' => true,
+	        'update_entry_meta_callback' => array( $this, 'cc_add_user_id_to_all_form_entries' ),
+	        'is_default_column' => true
+	    );
+	    return $entry_meta;
+	}
+
+	public function cc_add_user_id_to_all_form_entries($key, $lead, $form){
+	    //add user ID to all form entries. Why doesn't GF do this anyway?
+	    $user_id = get_current_user_id();
+	    return apply_filters( 'cc_add_user_id_to_all_form_entries', $user_id );
+	}
+
+	// 8. WangGuard
+		// Add "about me" to the user row. Helps to ID spammers.
+	public function wg_after_info_about_me( $contents, $user, $column_name ){
+		$towrite = print_r($user, true);
+	    $fp = fopen('wg_filter.txt', 'a');
+	    fwrite($fp, $towrite);
+	    fclose($fp);
+		$args = array(
+			'field' 	=> 'About Me',
+			'user_id'	=> $user->ID
+			);
+		if ( $about_me = bp_get_profile_field_data( $args ) ) {
+			$length = 100;
+			if ( strlen( $about_me ) > $length ) {
+				$about_me = substr( $about_me, 0, $length) . '&hellip;';
+			}
+			$contents .= '<br /> <em>' . $about_me . '</em>';
+		}
+
+		return $contents;
+	}
+
+	//Testing functions
+	public function test_bp_core_fetch_avatar_filter( $output, $params, $params_item_id, $params_avatar_dir, $html_css_id, $html_width, $html_height, $avatar_folder_url, $avatar_folder_dir) {
+		$args = array(
+			'output' => $output,
+			'params' => $params,
+			'params_item_id' => $params_item_id,
+			'params_avatar_dir' => $params_avatar_dir,
+			'html_css_id' => $html_css_id,
+			'html_width' => $html_width,
+			'html_height' => $html_height,
+			'avatar_folder_url' => $avatar_folder_url,
+			'avatar_folder_dir' => $avatar_folder_dir,
+			);
+		$towrite = '';
+		foreach ($args as $key => $value) {
+		    $towrite .= PHP_EOL . $key . ' ' . print_r( $value, TRUE);
+		}
+
+	    $fp = fopen('bp_core_fetch_avatar_filter.txt', 'a');
+	    fwrite($fp, $towrite);
+	    fclose($fp);
+
+	    return $output;
+
+	}
+
+	/**
+	 * 1f. Don't show new site and group memberships on activity stream default view
+	 *
+	 * @since    0.1.4
+	 */
+	public function check_querystring( $query_string, $object, $object_filter, $object_scope, $object_page, $object_search_terms, $object_extras ){
+		$towrite = PHP_EOL . '$query_string: ' . print_r($query_string, TRUE);
+		$towrite .= PHP_EOL . '$object: ' . print_r($object, TRUE);
+		$towrite .= PHP_EOL . '$object_filter: ' . print_r($object_filter, TRUE);
+		$towrite .= PHP_EOL . '$object_scope: ' . print_r($object_scope, TRUE);
+		$towrite .= PHP_EOL . '$object_page: ' . print_r($object_page, TRUE);
+		$towrite .= PHP_EOL . '$object_search_terms: ' . print_r($object_search_terms, TRUE);
+		$towrite .= PHP_EOL . '$object_extras: ' . print_r($object_extras, TRUE);
+		// $towrite .= PHP_EOL . 'is groups activity? ' . print_r( bp_is_group() , TRUE);
+		// $towrite .= PHP_EOL . 'is activity directory? ' . print_r( bp_is_activity_directory() , TRUE);
+
+
+		// $towrite .= PHP_EOL . '$args: ' . print_r($args, TRUE);
+		// $towrite .= PHP_EOL . '$modded qs: ' . print_r($query_string, TRUE);
+		$towrite .= PHP_EOL . '------------------';
+		$fp = fopen('bp_legacy_theme_ajax_querystring.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
+
+		return $query_string;
+	}
+
+	public function trap_component_at_include(){
+		$towrite = PHP_EOL . 'component at include: ' . print_r(  bp_current_component(), TRUE);
+		$towrite .= PHP_EOL . '------------------';
+		$fp = fopen('component_sniffing.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
+
+	}
+
+	public function trap_component_at_init(){
+		$towrite = PHP_EOL . 'component at init: ' . print_r(  bp_current_component(), TRUE);
+		$towrite .= PHP_EOL . '------------------';
+		$fp = fopen('component_sniffing.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
+
 	}
 
 
