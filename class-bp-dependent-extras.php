@@ -129,6 +129,10 @@ class CC_Functionality_BP_Dependent_Extras {
 			// Add "about me" to the user row. Helps to ID spammers.
 			add_filter( 'wg_users_table_info_cell', array( $this, 'wg_after_info_about_me' ), 10, 3 );
 
+		// 9. BJ Lazy Load modifications
+			// Disable Lazy load on user and group avatar upload/crop pages.
+			add_filter( 'bj_lazy_load_run_filter', array( $this, 'skip_lazy_load' ), 12 );
+
 
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
@@ -704,6 +708,18 @@ class CC_Functionality_BP_Dependent_Extras {
 
 		return $contents;
 	}
+
+	// 9. BJ Lazy Load modifications
+		// Disable Lazy load on user and group avatar upload/crop pages.
+		public function skip_lazy_load( $content ) {
+
+		    if ( bp_is_group_creation_step( 'group-avatar' )
+		    	|| bp_is_group_admin_screen( 'group-avatar' )
+		    	|| bp_is_user_change_avatar() ) {
+				return false;
+		    }
+			return $content;
+		}
 
 	//Testing functions
 	public function test_bp_core_fetch_avatar_filter( $output, $params, $params_item_id, $params_avatar_dir, $html_css_id, $html_width, $html_height, $avatar_folder_url, $avatar_folder_dir) {
