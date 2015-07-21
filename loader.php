@@ -2,7 +2,7 @@
 /*
 Plugin Name: CC Functionality
 Description: Adds functionality that is not theme dependent
-Version: 0.1.5
+Version: 0.1.6
 License: GPLv3
 Author: David Cavins
 */

@@ -20,7 +20,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '0.1.5';
+	const VERSION = '0.1.6';
 
 	/**
 	 *
@@ -90,6 +90,8 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_filter('bp_docs_default_group_settings', array( $this, 'bp_docs_default_settings_for_child_groups' ), 12, 2);
 		//		d. Allow comment functionality on BP Docs.
 				// add_filter('bp_docs_allow_comment_section', array( $this, 'bp_docs_allow_comments' ), 12, 2);
+		// 		e. Make links and such in BP Docs clickable
+				add_filter( 'bp_docs_get_the_content', array( $this, 'make_bp_docs_content_clickable' ), 28, 1 );
 
 		//	3. BP Group Hierarchy behavior changes
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
@@ -578,6 +580,15 @@ class CC_Functionality_BP_Dependent_Extras {
 	 */
 	public function bp_docs_allow_comments( $setting ) {
 	  return true;
+	}
+
+	/**
+	 * 2e. Make links and such in BP Docs clickable.
+	 *
+	 * @since    0.1.6
+	 */
+	public function make_bp_docs_content_clickable( $content ) {
+		return make_clickable( $content );
 	}
 
 	/* 3. BP Group Hierarchy behavior changes
