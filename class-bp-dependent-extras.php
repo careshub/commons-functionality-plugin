@@ -92,6 +92,8 @@ class CC_Functionality_BP_Dependent_Extras {
 				// add_filter('bp_docs_allow_comment_section', array( $this, 'bp_docs_allow_comments' ), 12, 2);
 		// 		e. Make links and such in BP Docs clickable
 				add_filter( 'bp_docs_get_the_content', array( $this, 'make_bp_docs_content_clickable' ), 28, 1 );
+		//      f. No folders for now
+				add_filter( 'bp_docs_enable_folders', array( $this, 'bp_docs_no_folders' ) );
 
 		//	3. BP Group Hierarchy behavior changes
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
@@ -589,6 +591,14 @@ class CC_Functionality_BP_Dependent_Extras {
 	 */
 	public function make_bp_docs_content_clickable( $content ) {
 		return make_clickable( $content );
+	}
+	/**
+	 * 2f. DOn't use folders yet.
+	 *
+	 * @since    0.1.6
+	 */
+	public function bp_docs_no_folders( $on ) {
+		return false;
 	}
 
 	/* 3. BP Group Hierarchy behavior changes
