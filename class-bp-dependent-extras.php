@@ -94,6 +94,7 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_filter( 'bp_docs_get_the_content', array( $this, 'make_bp_docs_content_clickable' ), 28, 1 );
 		//      f. No folders for now
 				add_filter( 'bp_docs_enable_folders', array( $this, 'bp_docs_no_folders' ) );
+				add_filter( 'bp_docs_enable_folders_for_current_context', array( $this, 'bp_docs_no_folders' ) );
 
 		//	3. BP Group Hierarchy behavior changes
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
@@ -102,7 +103,9 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_filter( 'bp_get_search_default_text', array( $this, 'groups_dir_search_placeholder_text' ), 12, 2 );
 
 		//		c. Don't show the "Hublets" tab to non-logged-in or non-member visitors
-				add_filter('bp_group_hierarchy_show_member_groups', array( $this, 'group_hierarchy_hublet_tab_visibility' ) );
+				// Why did we do this? Seems strange. The plugin only shows the hublets tab if the user is a group admin, can create subgroups or there are sub groups.
+				// Maybe only show if there are subgroups that the user can see.
+				add_filter('bp_group_hierarchy_show_member_groups', array( $this, 'group_hierarchy_hublet_tab_visibility' ), 10, 4 );
 
 				// Break the-content filter
 				// add_action( 'wp_init', array($this, 'bust_formatting'), 1 );
@@ -143,6 +146,11 @@ class CC_Functionality_BP_Dependent_Extras {
 			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
 			// add_action( 'bp_include', array( $this, 'trap_component_at_include' ), 88 );
 			// add_action( 'init', array( $this, 'trap_component_at_init' ), 9 );
+			// add_filter('custom_menu_order', array( $this, 'wp_admin_menu_order' ) ); // Activate custom_menu_order
+			// add_filter('menu_order', array( $this, 'wp_admin_menu_order' ) );
+			// add_action( 'admin_footer', array( $this, 'show_wp_menu_positions' ) );
+
+
 
 	}
 
@@ -636,14 +644,57 @@ class CC_Functionality_BP_Dependent_Extras {
 	 *
 	 * @since    0.1.5
 	 */
-	function group_hierarchy_hublet_tab_visibility( $show_tab ) {
-		if ( ! $user_id = get_current_user_id() ) {
-			return false;
+	function group_hierarchy_hublet_tab_visibility( $show_tab, $group_id, $is_item_admin, $can_create ) {
+				// $towrite = PHP_EOL . 'hierarchy enable nav item current group: ' . print_r($bp->groups->current_group, TRUE);
+		$bp = buddypress();
+		// $towrite = PHP_EOL . 'incoming show tab: ' . print_r($show_tab, TRUE);
+		// $towrite .= PHP_EOL . '$group_id ' . print_r($group_id, TRUE);
+		// $towrite .= PHP_EOL . '$is_item_admin: ' . print_r($is_item_admin, TRUE);
+		// $towrite .= PHP_EOL . '$my_is_item_admin: ' . print_r($bp->is_item_admin, TRUE);
+		// $towrite .= PHP_EOL . '$mycan_create: ' . print_r($can_create, TRUE);
+		// $towrite .= PHP_EOL . '$can_create: ' . print_r($bp->groups->current_group->can_create_subitems, TRUE);
+		// $towrite .= PHP_EOL . '$user_id: ' . print_r(get_current_user_id(), TRUE);
+		// $fp = fopen('debug_hierarchy.txt', 'a');
+		// fwrite($fp, $towrite);
+		// fclose($fp);
+
+		// If $is_item_admin and $can_create are false, we should make sure that the user could actually see any of the subgroups. So sometimes we'll turn a true into a false
+		if ( $show_tab && ! $is_item_admin && ! $can_create ) {
+			$show_tab = false;
+			// Return true if the user belongs to any of the subgroups or if any of the groups are public.
+			if ( $user_id = get_current_user_id() ) {
+
+				$args = array(
+					'parent_id' => $group_id,
+					'per_page' => null, // The number of results to return per page
+					'page' => null,
+				);
+				$subgroups = bp_group_hierarchy_get_by_hierarchy( $args );
+				if ( ! empty( $subgroups['groups'] ) ) {
+					foreach ( $subgroups['groups'] as $key => $group) {
+						// $towrite = PHP_EOL . '$group: ' . print_r( $group, TRUE);
+						// $fp = fopen('debug_hierarchy.txt', 'a');
+						// fwrite($fp, $towrite);
+						// fclose($fp);
+						if ( $group->status == "public" || $group->is_member ) {
+							return true;
+						}
+					}
+				}
+			}
 		}
 
-		if ( ! groups_is_user_member( $user_id, bp_get_current_group_id() ) ) {
-			return false;
-		}
+		// $fp = fopen('debug_hierarchy.txt', 'a');
+		// fwrite($fp, $towrite);
+		// fclose($fp);
+
+		// if ( ! $user_id = get_current_user_id() ) {
+		// 	return false;
+		// }
+
+		// if ( ! groups_is_user_member( $user_id, $group_id ) ) {
+		// 	return false;
+		// }
 
 	    return $show_tab;
 	}
@@ -731,15 +782,22 @@ class CC_Functionality_BP_Dependent_Extras {
 	}
 
 	// 9. BJ Lazy Load modifications
-		// Disable Lazy load on user and group avatar upload/crop pages.
-		public function skip_lazy_load( $content ) {
-
+		public function skip_lazy_load( $run_filter ) {
+			// Disable Lazy load on user and group avatar upload/crop pages.
 		    if ( bp_is_group_creation_step( 'group-avatar' )
 		    	|| bp_is_group_admin_screen( 'group-avatar' )
 		    	|| bp_is_user_change_avatar() ) {
 				return false;
 		    }
-			return $content;
+
+		    //Disable Lazy Load for old version of IE
+			if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
+			    if ( strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 8' ) !== false || strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 7' ) !== false ) {
+			    	return false;
+			    }
+			}
+
+			return $run_filter;
 		}
 
 	//Testing functions
@@ -813,7 +871,6 @@ class CC_Functionality_BP_Dependent_Extras {
 
 	}
 
-
 	// UTILITY FUNCTIONS
 	/**
 	 * Get the group's parent id while in the group create steps
@@ -831,4 +888,40 @@ class CC_Functionality_BP_Dependent_Extras {
 		// remove_all_shortcodes();
 		remove_filter( 'the_content', 'do_shortcode' );
 	}
+
+	function wp_admin_menu_order( $menu_order ) {
+
+		$towrite .= PHP_EOL . 'menu order:' . print_r( $menu_order, TRUE );
+		$fp = fopen('wp-admin-menu-order.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
+
+	    // if ( !$menu_ord ) return true;
+
+	    // return array(
+	    //     'index.php', // Dashboard
+	    //     'separator1', // First separator
+	    //     'edit.php', // Posts
+	    //     'upload.php', // Media
+	    //     'link-manager.php', // Links
+	    //     'edit.php?post_type=page', // Pages
+	    //     'edit-comments.php', // Comments
+	    //     'separator2', // Second separator
+	    //     'themes.php', // Appearance
+	    //     'plugins.php', // Plugins
+	    //     'users.php', // Users
+	    //     'tools.php', // Tools
+	    //     'options-general.php', // Settings
+	    //     'separator-last', // Last separator
+	    // );
+	    return $menu_order;
+	}
+
+	function show_wp_menu_positions(){
+		echo "<pre>";
+		print_r($GLOBALS['menu']);
+		echo "</pre>";
+	}
+
+
 }
