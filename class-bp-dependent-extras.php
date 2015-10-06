@@ -140,6 +140,9 @@ class CC_Functionality_BP_Dependent_Extras {
 			// Disable Lazy load on user and group avatar upload/crop pages.
 			add_filter( 'bj_lazy_load_run_filter', array( $this, 'skip_lazy_load' ), 12 );
 
+		// 10. Changes to the AgSite group
+			add_action( 'bp_before_group_header_meta', array( $this, 'add_mu_extension_logo' ) );
+
 
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
@@ -798,6 +801,18 @@ class CC_Functionality_BP_Dependent_Extras {
 			}
 
 			return $run_filter;
+		}
+
+	// 10. Changes to the AgSite group
+		public function add_mu_extension_logo() {
+			if ( bp_get_current_group_id() == 661 ){
+				// Two options:
+				// http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png
+				// http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-80x346.png
+				?><div class="alignright">
+					<img src="http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png" alt="University of Missouri Extension logo" class="wp-post-image"/>
+				</div><?php
+			}
 		}
 
 	//Testing functions
