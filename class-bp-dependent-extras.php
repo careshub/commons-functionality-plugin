@@ -733,8 +733,13 @@ class CC_Functionality_BP_Dependent_Extras {
 		// This prevents relevanssi from breaking our archive searches
 		// For BP Docs, Help articles, SA stuff
 	public function stop_relevanssi_on_archives( $prevent ) {
-		if ( is_post_type_archive() || is_page( 'salud-america/search-results' ) || is_page( 'groups' ) )
+		if ( is_post_type_archive()
+			 || is_page( 'groups' )
+			 || ( function_exists( 'bp_docs_is_user_docs' ) && bp_docs_is_user_docs() )
+			 || ( function_exists( 'bp_docs_is_docs_component' ) && bp_is_group() && bp_docs_is_docs_component() )
+			 ) {
 		    $prevent = false;
+		}
 
 		return $prevent;
 	}
