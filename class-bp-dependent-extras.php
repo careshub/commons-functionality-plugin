@@ -143,6 +143,16 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 10. Changes to the AgSite group
 			add_action( 'bp_before_group_header_meta', array( $this, 'add_mu_extension_logo' ) );
 
+		// 11. Add "Report sender as spammer" link to private message threads.
+			// Uses Wangguard functionality.
+			// Add "report as spammer" to messages overview screen.
+			// This has some complications, so punting for now. Complications:
+			// If there are multiple recipients, who gets marked, or maybe no link is shown when it's confusing?
+			// Is it weird to have the button show up sometimes and not others?
+			// add_action( 'bp_messages_loop_after_action_links', array( $this, 'add_report_sender_link' ) );
+
+			// Add "report sender as spammer" link to individual messages in a message thread.
+			add_action( 'bp_after_message_content', array( $this, 'add_report_message_as_spam_link' ) );
 
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
@@ -152,6 +162,9 @@ class CC_Functionality_BP_Dependent_Extras {
 			// add_filter('custom_menu_order', array( $this, 'wp_admin_menu_order' ) ); // Activate custom_menu_order
 			// add_filter('menu_order', array( $this, 'wp_admin_menu_order' ) );
 			// add_action( 'admin_footer', array( $this, 'show_wp_menu_positions' ) );
+
+
+
 
 
 
@@ -817,6 +830,30 @@ class CC_Functionality_BP_Dependent_Extras {
 				?><div class="alignright">
 					<img src="http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png" alt="University of Missouri Extension logo" class="wp-post-image"/>
 				</div><?php
+			}
+		}
+
+	// 11. Add "Report sender as spammer" link to private message threads.
+		// This is attached at the thread level, so should probably only apply if there's only one other recipient in the conversation. It gets complicated.
+		public function add_report_sender_link() {
+			?>
+			<a href="#" class="button confirm">Report as Spam</a>
+			<?php
+		}
+
+		// Adds "Report as spammer" to individual messages in a message thread.
+		// Relies on the WangGuard moderation queue.
+		public function add_report_message_as_spam_link() {
+			if ( bp_get_the_thread_message_sender_id() != bp_loggedin_user_id() ) {
+				echo bp_get_button( array(	'id' => 'wangguard_report_user',
+								'component' => 'members',
+								'must_be_logged_in' => true,
+								'block_self' => false,
+								'wrapper_id' => 'wangguard_report_user-button',
+								'link_href' => "javascript:void(0)",
+								'link_class' =>'alignright wangguard-user-report wangguard-user-report-id-' . bp_get_the_thread_message_sender_id(),
+								'link_title' => __('Report as Spam', 'wangguard'),
+								'link_text' => __('Report as Spam', 'wangguard')) );
 			}
 		}
 
