@@ -425,8 +425,10 @@ class CC_Functionality_BP_Dependent_Extras {
 	public function request_membership_redirect( $button ) {
 		// To prevent buddypress.js from acting on the request membership button click, we'll need to remove the class .group-button from the button wrapper. See buddypress.js line 1252.
 
-		if ( $button[ 'id' ] == 'request_membership' )
-			$button[ 'wrapper_class' ] = str_replace( 'group-button', '', $button[ 'wrapper_class' ] );
+		if ( $button['id'] == 'request_membership' ) {
+			$button['wrapper_class'] = str_replace( 'group-button', '', $button[ 'wrapper_class' ] );
+			$button['link_class'] = str_replace( 'group-button', '', $button[ 'link_class' ] );
+		}
 
 		return $button;
 	}
