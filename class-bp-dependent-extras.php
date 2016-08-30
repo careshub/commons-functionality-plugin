@@ -93,12 +93,14 @@ class CC_Functionality_BP_Dependent_Extras {
 		//		c. If this is a new child group, we'll set up BP docs to match the parent group's setup. This step copies the parent group's attributes over to the child group.
 				add_filter('bp_docs_default_group_settings', array( $this, 'bp_docs_default_settings_for_child_groups' ), 12, 2);
 		//		d. Allow comment functionality on BP Docs.
-				// add_filter('bp_docs_allow_comment_section', array( $this, 'bp_docs_allow_comments' ), 12, 2);
+				// add_filter('bp_docs_allow_comment_section', '__return_true');
 		// 		e. Make links and such in BP Docs clickable
 				add_filter( 'bp_docs_get_the_content', array( $this, 'make_bp_docs_content_clickable' ), 28, 1 );
 		//      f. No folders for now
-				add_filter( 'bp_docs_enable_folders', array( $this, 'bp_docs_no_folders' ) );
-				add_filter( 'bp_docs_enable_folders_for_current_context', array( $this, 'bp_docs_no_folders' ) );
+				// add_filter( 'bp_docs_enable_folders', '__return_false' );
+				// add_filter( 'bp_docs_enable_folders_for_current_context', '__return_false' );
+				// g. No parent docs
+				add_filter( 'bp_docs_allow_parent_doc_setting', '__return_false' );
 
 		//	3. BP Group Hierarchy behavior changes
 		// 		a. Make "only Group Admins can create member groups" the only option for create group form.
@@ -172,12 +174,6 @@ class CC_Functionality_BP_Dependent_Extras {
 			// add_filter('custom_menu_order', array( $this, 'wp_admin_menu_order' ) ); // Activate custom_menu_order
 			// add_filter('menu_order', array( $this, 'wp_admin_menu_order' ) );
 			// add_action( 'admin_footer', array( $this, 'show_wp_menu_positions' ) );
-
-
-
-
-
-
 	}
 
 	/**
@@ -610,29 +606,12 @@ class CC_Functionality_BP_Dependent_Extras {
 	}
 
 	/**
-	 * 2d. Allow comment functionality on BP Docs.
-	 *
-	 * @since    0.1.1
-	 */
-	public function bp_docs_allow_comments( $setting ) {
-	  return true;
-	}
-
-	/**
 	 * 2e. Make links and such in BP Docs clickable.
 	 *
 	 * @since    0.1.6
 	 */
 	public function make_bp_docs_content_clickable( $content ) {
 		return make_clickable( $content );
-	}
-	/**
-	 * 2f. DOn't use folders yet.
-	 *
-	 * @since    0.1.6
-	 */
-	public function bp_docs_no_folders( $on ) {
-		return false;
 	}
 
 	/* 3. BP Group Hierarchy behavior changes
