@@ -77,8 +77,9 @@ class CC_Functionality_BP_Dependent_Extras {
 				add_action( 'bp_group_send_invites_item', array( $this, 'add_invitation_meta' ) );
 		// 		e. Use wp_editor for the activity post_form and dump the media-adding plugin, as it's broken as of BP 2.1.
 				// add_action( 'whats_new_textarea', array( $this, 'post_form_wp_editor' ) );
-		// 		f. Don't show new site and group memberships on activity stream default view
-				add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'activity_querystring_limit_types' ), 10, 7 );
+		// 		f. Don't show certain types of activity items on the site activity stream's default view.
+				add_filter( 'bp_ajax_querystring', array( $this, 'activity_stream_hide_activity_types' ), 22, 2 );
+				// add_filter( 'bp_activity_set_groups_scope_args', array( $this, 'group_activity_stream_hide_activity_types' ), 12, 2 );
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -486,56 +487,51 @@ class CC_Functionality_BP_Dependent_Extras {
 	}
 
 	/**
-	 * 1f. Don't show new site and group memberships on activity stream default view
+	 * 1f. Don't show certain types of activity items on the site activity stream's default view.
 	 *
-	 * @since    0.1.4
+	 * @since    0.1.7
+	 *
+	 * @param string querystring Current query string.
+	 * @param string $object     Current template component.
+	 *
+	 * @return array querystring options in array format
 	 */
-	public function activity_querystring_limit_types( $query_string, $object, $object_filter, $object_scope, $object_page, $object_search_terms, $object_extras ){
-		// $towrite = PHP_EOL . '$query_string: ' . print_r($query_string, TRUE);
-		// $towrite .= PHP_EOL . '$object: ' . print_r($object, TRUE);
-		// $towrite .= PHP_EOL . '$object_filter: ' . print_r($object_filter, TRUE);
-		// $towrite .= PHP_EOL . '$object_scope: ' . print_r($object_scope, TRUE);
-		// $towrite .= PHP_EOL . '$object_page: ' . print_r($object_page, TRUE);
-		// $towrite .= PHP_EOL . '$object_search_terms: ' . print_r($object_search_terms, TRUE);
-		// $towrite .= PHP_EOL . '$object_extras: ' . print_r($object_extras, TRUE);
-		// $towrite .= PHP_EOL . 'is groups activity? ' . print_r( bp_is_group() , TRUE);
-		// $towrite .= PHP_EOL . 'is activity directory? ' . print_r( bp_is_activity_directory() , TRUE);
+	public function activity_stream_hide_activity_types( $querystring, $object ) {
+		$exclude_types = array();
 
-		// Is this the default activity view?
-		if ( $object == 'activity' && ( $object_scope == 'all' || empty( $object_scope ) ) && ( $object_filter == -1 || empty( $object_filter ) ) ) {
-			$args = array();
+	    if ( 'activity' == $object && ! isset( $querystring['scope'] ) && ! isset( $querystring['type'] ) ) {
+	        // If no $type has been set, the user hasn't used the filters.
+	        // If no $scope is set, this is the "all members" list.
+
+			// Remove some types from the main site activity feed.
 			if ( bp_is_activity_directory() ) {
-				// From main activity directory, exclude profile updates, new memberships
-				// component is now 'xprofile' used to be 'profile' before Oct 2013. We'll just find the recent items.
-				$args = array(
-					'page' => 1,
-					'per_page' => 200,
-					'filter' => array( 'object' => 'xprofile' ),
-					);
-			} else if ( bp_is_group() ) {
-				// In the groups directory, we want to hide the "joined group" items.
-				$args = array(
-					'filter' => array(
-						'action' => 'joined_group',
-						'primary_id' => bp_get_current_group_id()
-					),
-				);
-			}
+	            $exclude_types = array( 'new_member', 'new_avatar', 'updated_profile' );
+			} // elseif ( bp_is_group() ) {
+				// Remove some types from group activity feed.
+				// This doesn't work as of 2.4.3 because 'filter_query' is ignored if scope is set.
+				// This will probably change.
+				// $exclude_types = array( 'joined_group' );
+			// }
+		}
 
-			if ( ! empty( $args ) ) {
-				$items_to_exclude = bp_activity_get( $args );
-				//array_column is PHP 5.5+ :(
-				// $ids_to_exclude = array_column( $items_to_exclude['activities'], 'id' );
-				$ids_to_exclude = array();
-				foreach ($items_to_exclude['activities'] as $item) {
-					$ids_to_exclude[] = $item->id;
-				}
-				$ids_to_exclude = implode( ',', $ids_to_exclude );
-
-				if ( $ids_to_exclude ) {
-					$query_string .= '&exclude=' . $ids_to_exclude;
-				}
+		// Is there anything for us to do?
+		// Note that 'filter_query' is ignored if scope is set in 2.4.3. Prob will change.
+		if ( ! empty( $exclude_types ) ) {
+			if ( is_string( $querystring ) ) {
+				wp_parse_str( $querystring, $querystring );
 			}
+			$querystring['filter_query'] = array(
+				array(
+					'column' => 'type',
+					'value'  => $exclude_types,
+					'compare' => 'NOT IN'
+				)
+			);
+		}
+
+	    return $querystring;
+	}
+
 
 		}
 		// $towrite .= PHP_EOL . '$args: ' . print_r($args, TRUE);
