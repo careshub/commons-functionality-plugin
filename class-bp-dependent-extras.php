@@ -80,6 +80,9 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 		f. Don't show certain types of activity items on the site activity stream's default view.
 				add_filter( 'bp_ajax_querystring', array( $this, 'activity_stream_hide_activity_types' ), 22, 2 );
 				// add_filter( 'bp_activity_set_groups_scope_args', array( $this, 'group_activity_stream_hide_activity_types' ), 12, 2 );
+		// 		g. Don't use the BP Twenty Twelve companion stylesheet.
+				add_action( 'bp_enqueue_scripts', array( $this, 'dequeue_bp_stylesheets' ), 20 );
+
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -136,6 +139,8 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 8. WangGuard modifications
 			// Add "about me" to the user row. Helps to ID spammers.
 			add_filter( 'wg_users_table_info_cell', array( $this, 'wg_after_info_about_me' ), 10, 3 );
+			// Dequeue WangGuard css file.
+			add_action( 'wp_head', array( $this, 'dequeue_wangguard_stylesheet' ), 999 );
 
 		// 9. BJ Lazy Load modifications
 			// Disable Lazy load on user and group avatar upload/crop pages.
@@ -532,14 +537,17 @@ class CC_Functionality_BP_Dependent_Extras {
 	    return $querystring;
 	}
 
+	// 1g. Don't use the BP Twenty Twelve companion stylesheet.
+	public function dequeue_bp_stylesheets() {
+		/*
+		 * BuddyPress ships with companion stylesheets to make it look better in
+		 * vanilla core themes. We don't need them.
+		 */
+	    wp_dequeue_style( 'bp-twentytwelve' );
 
-		}
-		// $towrite .= PHP_EOL . '$args: ' . print_r($args, TRUE);
-		// $towrite .= PHP_EOL . '$modded qs: ' . print_r($query_string, TRUE);
-		// $towrite .= PHP_EOL . '------------------';
-		// $fp = fopen('bp_legacy_theme_ajax_querystring.txt', 'a');
-		// fwrite($fp, $towrite);
-		// fclose($fp);
+	    // We also don't use the basic BP styles.
+	    wp_dequeue_style( 'bp-child-css' );
+	}
 
 		return $query_string;
 	}
@@ -802,6 +810,11 @@ class CC_Functionality_BP_Dependent_Extras {
 		}
 
 		return $contents;
+	}
+
+	// Dequeue WangGuard css file.
+	public function dequeue_wangguard_stylesheet() {
+	    wp_dequeue_style( 'wangguard-bp' );
 	}
 
 	// 9. BJ Lazy Load modifications
