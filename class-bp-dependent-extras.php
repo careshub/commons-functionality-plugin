@@ -20,7 +20,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 *
 	 * @var     string
 	 */
-	const VERSION = '0.1.6';
+	protected $version = '';
 
 	/**
 	 *
@@ -53,6 +53,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 * @since     0.1.0
 	 */
 	private function __construct() {
+		$this->version = CC_FUNCTIONALITY_PLUGIN_VERSION;
 
 		// Load plugin text domain
 		// add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
@@ -365,7 +366,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 */
 	public function enqueue_styles() {
 		if ( function_exists( 'bp_is_groups_component' ) && ccgn_is_component() )
-			wp_enqueue_style( $this->plugin_slug . '-plugin-styles', plugins_url( 'assets/css/public.css', __FILE__ ), array(), self::VERSION );
+			wp_enqueue_style( $this->plugin_slug . '-plugin-styles', plugins_url( 'assets/css/public.css', __FILE__ ), array(), $this->version );
 	}
 
 	/**
@@ -377,7 +378,7 @@ class CC_Functionality_BP_Dependent_Extras {
 		// only fetch the js file if on the groups directory
 		// bp_is_groups_directory() is available at 2.0.0.
 		if ( bp_is_groups_component() && ! bp_current_action() && ! bp_current_item() )
-			wp_enqueue_script( $this->plugin_slug . '-plugin-script', plugins_url( 'channel-select.js', __FILE__ ), array( 'jquery' ), self::VERSION, TRUE );
+			wp_enqueue_script( $this->plugin_slug . '-plugin-script', plugins_url( 'channel-select.js', __FILE__ ), array( 'jquery' ), $this->version, TRUE );
 	}
 
 	/* 1. BuddyPress behavior changes
