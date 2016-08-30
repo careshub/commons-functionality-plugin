@@ -35,4 +35,4 @@ function cc_functionality_admin_class_init(){
 	require( dirname( __FILE__ ) . '/class-admin-extras.php' );
 	$admin_instance = CC_Functionality_Admin_Extras::get_instance();
 }
-add_action( 'admin_init', 'cc_functionality_nonbp_class_init' );
+add_action( 'admin_init', 'cc_functionality_admin_class_init' );
