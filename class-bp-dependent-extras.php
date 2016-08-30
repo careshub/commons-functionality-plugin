@@ -154,6 +154,10 @@ class CC_Functionality_BP_Dependent_Extras {
 			// Add "report sender as spammer" link to individual messages in a message thread.
 			add_action( 'bp_after_message_content', array( $this, 'add_report_message_as_spam_link' ) );
 
+		// 13. WP Email: Change default from and from email address.
+			add_filter( 'wp_mail_from', array( $this, 'change_wp_default_from_email_address' ) );
+			add_filter( 'wp_mail_from_name', array( $this, 'change_wp_default_from_email_name' ) );
+
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
 			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
@@ -858,6 +862,16 @@ class CC_Functionality_BP_Dependent_Extras {
 								'link_text' => __('Report as Spam', 'wangguard')) );
 			}
 		}
+
+	// 12. Writing Helper
+		// Filter "From" and "reply-to" values.
+		public function filter_writing_helper_feedback_email_headers( $headers, $user ) {
+			$headers = 'Reply-To: ' . $user->display_name . ' <' . $user->user_email . ">\r\n";
+			$headers .= "From: " . $user->display_name . " <donotreply@communitycommons.org>\r\n";
+
+			return $headers;
+		}
+
 
 	//Testing functions
 	public function test_bp_core_fetch_avatar_filter( $output, $params, $params_item_id, $params_avatar_dir, $html_css_id, $html_width, $html_height, $avatar_folder_url, $avatar_folder_dir) {
