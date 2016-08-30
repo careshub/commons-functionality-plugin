@@ -380,32 +380,6 @@ class CC_Functionality_BP_Dependent_Extras {
 			wp_enqueue_script( $this->plugin_slug . '-plugin-script', plugins_url( 'channel-select.js', __FILE__ ), array( 'jquery' ), self::VERSION, TRUE );
 	}
 
-	/**
-	 * NOTE:  Actions are points in the execution of a page or process
-	 *        lifecycle that WordPress fires.
-	 *
-	 *        Actions:    http://codex.wordpress.org/Plugin_API#Actions
-	 *        Reference:  http://codex.wordpress.org/Plugin_API/Action_Reference
-	 *
-	 * @since    0.1.0
-	 */
-	public function action_method_name() {
-		// @TODO: Define your action hook callback here
-	}
-
-	/**
-	 * NOTE:  Filters are points of execution in which WordPress modifies data
-	 *        before saving it or sending it to the browser.
-	 *
-	 *        Filters: http://codex.wordpress.org/Plugin_API#Filters
-	 *        Reference:  http://codex.wordpress.org/Plugin_API/Filter_Reference
-	 *
-	 * @since    0.1.0
-	 */
-	public function filter_method_name() {
-		// @TODO: Define your filter hook callback here
-	}
-
 	/* 1. BuddyPress behavior changes
 	*****************************************************************************/
 	/**
@@ -450,9 +424,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	public function add_invitation_meta(){
 		global $invites_template;
 		$invite = $invites_template->invite;
-		// echo '<pre>';
-		// var_dump( $invites_template->invite );
-		// echo '</pre>';
+
 		$invite_sent = $invites_template->invite->user->invite_sent;
 		if ( $invite_sent ) {
 			$invited_date = date( "m-d-Y", strtotime( $invites_template->invite->user->date_modified ) );
@@ -547,9 +519,6 @@ class CC_Functionality_BP_Dependent_Extras {
 
 	    // We also don't use the basic BP styles.
 	    wp_dequeue_style( 'bp-child-css' );
-	}
-
-		return $query_string;
 	}
 
 	/* 2. BuddyPress Docs behavior changes
@@ -654,18 +623,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 * @since    0.1.5
 	 */
 	function group_hierarchy_hublet_tab_visibility( $show_tab, $group_id, $is_item_admin, $can_create ) {
-				// $towrite = PHP_EOL . 'hierarchy enable nav item current group: ' . print_r($bp->groups->current_group, TRUE);
 		$bp = buddypress();
-		// $towrite = PHP_EOL . 'incoming show tab: ' . print_r($show_tab, TRUE);
-		// $towrite .= PHP_EOL . '$group_id ' . print_r($group_id, TRUE);
-		// $towrite .= PHP_EOL . '$is_item_admin: ' . print_r($is_item_admin, TRUE);
-		// $towrite .= PHP_EOL . '$my_is_item_admin: ' . print_r($bp->is_item_admin, TRUE);
-		// $towrite .= PHP_EOL . '$mycan_create: ' . print_r($can_create, TRUE);
-		// $towrite .= PHP_EOL . '$can_create: ' . print_r($bp->groups->current_group->can_create_subitems, TRUE);
-		// $towrite .= PHP_EOL . '$user_id: ' . print_r(get_current_user_id(), TRUE);
-		// $fp = fopen('debug_hierarchy.txt', 'a');
-		// fwrite($fp, $towrite);
-		// fclose($fp);
 
 		// If $is_item_admin and $can_create are false, we should make sure that the user could actually see any of the subgroups. So sometimes we'll turn a true into a false
 		if ( $show_tab && ! $is_item_admin && ! $can_create ) {
@@ -681,10 +639,6 @@ class CC_Functionality_BP_Dependent_Extras {
 				$subgroups = bp_group_hierarchy_get_by_hierarchy( $args );
 				if ( ! empty( $subgroups['groups'] ) ) {
 					foreach ( $subgroups['groups'] as $key => $group) {
-						// $towrite = PHP_EOL . '$group: ' . print_r( $group, TRUE);
-						// $fp = fopen('debug_hierarchy.txt', 'a');
-						// fwrite($fp, $towrite);
-						// fclose($fp);
 						if ( $group->status == "public" || $group->is_member ) {
 							return true;
 						}
@@ -692,18 +646,6 @@ class CC_Functionality_BP_Dependent_Extras {
 				}
 			}
 		}
-
-		// $fp = fopen('debug_hierarchy.txt', 'a');
-		// fwrite($fp, $towrite);
-		// fclose($fp);
-
-		// if ( ! $user_id = get_current_user_id() ) {
-		// 	return false;
-		// }
-
-		// if ( ! groups_is_user_member( $user_id, $group_id ) ) {
-		// 	return false;
-		// }
 
 	    return $show_tab;
 	}
