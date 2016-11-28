@@ -123,6 +123,12 @@ class CC_Functionality_BP_Dependent_Extras {
 			add_filter( 'bp_group_email_subscription_enable_nav_item', array( $this, 'disable_bpge_nav_item' ) );
 			add_filter( 'ass_digest_format_item', array( $this, 'bpge_strip_shortcodes' ) );
 			add_filter( 'bp_ass_activity_notification_message', array( $this, 'bpge_strip_shortcodes_not_digest' ) );
+			// Tell BPGES that new docs should be added to the weekly summary.
+			add_filter( 'ass_this_activity_is_important', array( $this, 'bpge_bp_doc_created_is_important' ), 10, 2 );
+
+			// Increase the Async class's timeout.
+			add_filter( 'ass_async_task_timeout', function() { return 5; } );
+
 
 
 
@@ -683,6 +689,14 @@ class CC_Functionality_BP_Dependent_Extras {
 		return strip_shortcodes( $message );
 	}
 
+	// Tell BPGES that new docs should be added to the weekly summary.
+	public function bpge_bp_doc_created_is_important( $retval, $activity_type ) {
+		if ( 'bp_doc_created' == $activity_type ) {
+			$retval = true;
+		}
+
+		return $retval;
+	}
 
 	// 5. Invite Anyone behavior changes
 	// Don't render the directory on the group invites page
