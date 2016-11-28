@@ -390,7 +390,7 @@ class CC_Functionality_BP_Dependent_Extras {
 	 */
 	public function remove_create_a_group_button( $args ){
 	  if ( ! current_user_can( 'delete_others_pages' ) )
-	    return false;
+		return false;
 
 	  return $args;
 	}
@@ -477,13 +477,13 @@ class CC_Functionality_BP_Dependent_Extras {
 	public function activity_stream_hide_activity_types( $querystring, $object ) {
 		$exclude_types = array();
 
-	    if ( 'activity' == $object && ! isset( $querystring['scope'] ) && ! isset( $querystring['type'] ) ) {
-	        // If no $type has been set, the user hasn't used the filters.
-	        // If no $scope is set, this is the "all members" list.
+		if ( 'activity' == $object && ! isset( $querystring['scope'] ) && ! isset( $querystring['type'] ) ) {
+			// If no $type has been set, the user hasn't used the filters.
+			// If no $scope is set, this is the "all members" list.
 
 			// Remove some types from the main site activity feed.
 			if ( bp_is_activity_directory() ) {
-	            $exclude_types = array( 'new_member', 'new_avatar', 'updated_profile' );
+				$exclude_types = array( 'new_member', 'new_avatar', 'updated_profile' );
 			} // elseif ( bp_is_group() ) {
 				// Remove some types from group activity feed.
 				// This doesn't work as of 2.4.3 because 'filter_query' is ignored if scope is set.
@@ -507,7 +507,7 @@ class CC_Functionality_BP_Dependent_Extras {
 			);
 		}
 
-	    return $querystring;
+		return $querystring;
 	}
 
 	// 1g. Don't use the BP Twenty Twelve companion stylesheet.
@@ -516,10 +516,10 @@ class CC_Functionality_BP_Dependent_Extras {
 		 * BuddyPress ships with companion stylesheets to make it look better in
 		 * vanilla core themes. We don't need them.
 		 */
-	    wp_dequeue_style( 'bp-twentytwelve' );
+		wp_dequeue_style( 'bp-twentytwelve' );
 
-	    // We also don't use the basic BP styles.
-	    wp_dequeue_style( 'bp-child-css' );
+		// We also don't use the basic BP styles.
+		wp_dequeue_style( 'bp-child-css' );
 	}
 
 	/* 2. BuddyPress Docs behavior changes
@@ -533,11 +533,11 @@ class CC_Functionality_BP_Dependent_Extras {
 	  // A refresh_access_settings AJAX request is fired after the page loads.
 	  // We'll apply our new defaults if a group id is passed as part of the request.
 	  if ( ( defined('DOING_AJAX') && DOING_AJAX ) && ( isset( $_POST['group_id'] ) && $_POST['group_id'] ) ) {
-	    if ( $doc_settings == $default_settings ) {
-	      foreach ($doc_settings as $key=>$setting) {
-	        $doc_settings[$key] = 'group-members';
-	      }
-	    }
+		if ( $doc_settings == $default_settings ) {
+		  foreach ($doc_settings as $key=>$setting) {
+			$doc_settings[$key] = 'group-members';
+		  }
+		}
 	  }
 
 	  return $doc_settings;
@@ -569,13 +569,13 @@ class CC_Functionality_BP_Dependent_Extras {
 	 * @since    0.1.0
 	 */
 	public function bp_docs_default_settings_for_child_groups( $settings, $group_id ) {
-	    if ( $parent_id = $this->get_parent_id( $group_id ) ) {
-		    $parent_settings = groups_get_groupmeta( $parent_id, 'bp-docs');
+		if ( $parent_id = $this->get_parent_id( $group_id ) ) {
+			$parent_settings = groups_get_groupmeta( $parent_id, 'bp-docs');
 
-		    if ( !empty( $parent_settings ) ) {
-		      $settings = $parent_settings;
-		    }
-	    }
+			if ( !empty( $parent_settings ) ) {
+			  $settings = $parent_settings;
+			}
+		}
 	  return $settings;
 	}
 
@@ -599,14 +599,14 @@ class CC_Functionality_BP_Dependent_Extras {
 		if ( current_user_can( 'delete_others_pages' ) )
 			return $permission_options;
 
-	    $new_options = array();
-	    foreach ($permission_options as $key => $value) {
-	    	if ( $key == 'group_admins' ) {
-	    		$new_options[$key] = $value;
-	    	}
-	    }
+		$new_options = array();
+		foreach ($permission_options as $key => $value) {
+			if ( $key == 'group_admins' ) {
+				$new_options[$key] = $value;
+			}
+		}
 
-	    return $new_options;
+		return $new_options;
 	}
 
 	// Groups Hierarchy filters the value of the groups directory search box placeholder, so our language file doesn't take effect. So we re-filter it.
@@ -648,7 +648,7 @@ class CC_Functionality_BP_Dependent_Extras {
 			}
 		}
 
-	    return $show_tab;
+		return $show_tab;
 	}
 
 	/* 4. BuddyPress Group Email Subscription changes
@@ -666,6 +666,7 @@ class CC_Functionality_BP_Dependent_Extras {
 		return $item;
 
 	}
+
 	// It appears that if the message is sent immediately, it requires a different filter.
 	public function bpge_strip_shortcodes_not_digest( $message, $message_array ) {
 		return strip_shortcodes( $message );
@@ -687,7 +688,7 @@ class CC_Functionality_BP_Dependent_Extras {
 			 || ( function_exists( 'bp_docs_is_user_docs' ) && bp_docs_is_user_docs() )
 			 || ( function_exists( 'bp_docs_is_docs_component' ) && bp_is_group() && bp_docs_is_docs_component() )
 			 ) {
-		    $prevent = false;
+			$prevent = false;
 		}
 
 		return $prevent;
@@ -701,28 +702,28 @@ class CC_Functionality_BP_Dependent_Extras {
 		//is_numeric - used when sorting the entry list, indicates whether the data should be treated as numeric when sorting
 		//is_default_column - when set to true automatically adds the column to the entry list, without having to edit and add the column for display
 		//update_entry_meta_callback - indicates what function to call to update the entry meta upon form submission or editing an entry
-	    $entry_meta['user_id'] = array(
-	        'label' => 'User ID',
-	        'is_numeric' => true,
-	        'update_entry_meta_callback' => array( $this, 'cc_add_user_id_to_all_form_entries' ),
-	        'is_default_column' => true
-	    );
-	    return $entry_meta;
+		$entry_meta['user_id'] = array(
+			'label' => 'User ID',
+			'is_numeric' => true,
+			'update_entry_meta_callback' => array( $this, 'cc_add_user_id_to_all_form_entries' ),
+			'is_default_column' => true
+		);
+		return $entry_meta;
 	}
 
 	public function cc_add_user_id_to_all_form_entries($key, $lead, $form){
-	    //add user ID to all form entries. Why doesn't GF do this anyway?
-	    $user_id = get_current_user_id();
-	    return apply_filters( 'cc_add_user_id_to_all_form_entries', $user_id );
+		//add user ID to all form entries. Why doesn't GF do this anyway?
+		$user_id = get_current_user_id();
+		return apply_filters( 'cc_add_user_id_to_all_form_entries', $user_id );
 	}
 
 	// 8. WangGuard
 		// Add "about me" to the user row. Helps to ID spammers.
 	public function wg_after_info_about_me( $contents, $user, $column_name ){
 		$towrite = print_r($user, true);
-	    $fp = fopen('wg_filter.txt', 'a');
-	    fwrite($fp, $towrite);
-	    fclose($fp);
+		$fp = fopen('wg_filter.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
 		$args = array(
 			'field' 	=> 'About Me',
 			'user_id'	=> $user->ID
@@ -740,23 +741,23 @@ class CC_Functionality_BP_Dependent_Extras {
 
 	// Dequeue WangGuard css file.
 	public function dequeue_wangguard_stylesheet() {
-	    wp_dequeue_style( 'wangguard-bp' );
+		wp_dequeue_style( 'wangguard-bp' );
 	}
 
 	// 9. BJ Lazy Load modifications
 		public function skip_lazy_load( $run_filter ) {
 			// Disable Lazy load on user and group avatar upload/crop pages.
-		    if ( bp_is_group_creation_step( 'group-avatar' )
-		    	|| bp_is_group_admin_screen( 'group-avatar' )
-		    	|| bp_is_user_change_avatar() ) {
+			if ( bp_is_group_creation_step( 'group-avatar' )
+				|| bp_is_group_admin_screen( 'group-avatar' )
+				|| bp_is_user_change_avatar() ) {
 				return false;
-		    }
+			}
 
-		    //Disable Lazy Load for old version of IE
+			//Disable Lazy Load for old version of IE
 			if ( isset( $_SERVER['HTTP_USER_AGENT'] ) ) {
-			    if ( strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 8' ) !== false || strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 7' ) !== false ) {
-			    	return false;
-			    }
+				if ( strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 8' ) !== false || strpos( $_SERVER['HTTP_USER_AGENT'], 'MSIE 7' ) !== false ) {
+					return false;
+				}
 			}
 
 			return $run_filter;
@@ -810,10 +811,10 @@ class CC_Functionality_BP_Dependent_Extras {
 
 	// 13. WP Email: Change default from and from email address.
 	public function change_wp_default_from_email_address( $email ) {
-		$towrite = PHP_EOL . 'incoming email address: ' . print_r( $email, TRUE);
-		$fp = fopen('sparkpost-debug.txt', 'a');
-		fwrite($fp, $towrite);
-		fclose($fp);
+		// $towrite = PHP_EOL . 'incoming email address: ' . print_r( $email, TRUE);
+		// $fp = fopen('sparkpost-debug.txt', 'a');
+		// fwrite($fp, $towrite);
+		// fclose($fp);
 		// If the value is the default, use a nicer version.
 		if ( substr( $email, 0, 9 ) === "wordpress" ) {
 			$email = 'info@communitycommons.org';
@@ -821,10 +822,10 @@ class CC_Functionality_BP_Dependent_Extras {
 		return $email;
 	}
 	public function change_wp_default_from_email_name( $email_name ) {
-		$towrite = PHP_EOL . 'incoming email name: ' . print_r( $email_name, TRUE);
-		$fp = fopen('sparkpost-debug.txt', 'a');
-		fwrite($fp, $towrite);
-		fclose($fp);
+		// $towrite = PHP_EOL . 'incoming email name: ' . print_r( $email_name, TRUE);
+		// $fp = fopen('sparkpost-debug.txt', 'a');
+		// fwrite($fp, $towrite);
+		// fclose($fp);
 		// If the value is the default, use a nicer version.
 		if ( 'WordPress' == $email_name ) {
 			$email_name = 'Community Commons';
@@ -847,14 +848,14 @@ class CC_Functionality_BP_Dependent_Extras {
 			);
 		$towrite = '';
 		foreach ($args as $key => $value) {
-		    $towrite .= PHP_EOL . $key . ' ' . print_r( $value, TRUE);
+			$towrite .= PHP_EOL . $key . ' ' . print_r( $value, TRUE);
 		}
 
-	    $fp = fopen('bp_core_fetch_avatar_filter.txt', 'a');
-	    fwrite($fp, $towrite);
-	    fclose($fp);
+		$fp = fopen('bp_core_fetch_avatar_filter.txt', 'a');
+		fwrite($fp, $towrite);
+		fclose($fp);
 
-	    return $output;
+		return $output;
 
 	}
 
@@ -928,25 +929,25 @@ class CC_Functionality_BP_Dependent_Extras {
 		fwrite($fp, $towrite);
 		fclose($fp);
 
-	    // if ( !$menu_ord ) return true;
+		// if ( !$menu_ord ) return true;
 
-	    // return array(
-	    //     'index.php', // Dashboard
-	    //     'separator1', // First separator
-	    //     'edit.php', // Posts
-	    //     'upload.php', // Media
-	    //     'link-manager.php', // Links
-	    //     'edit.php?post_type=page', // Pages
-	    //     'edit-comments.php', // Comments
-	    //     'separator2', // Second separator
-	    //     'themes.php', // Appearance
-	    //     'plugins.php', // Plugins
-	    //     'users.php', // Users
-	    //     'tools.php', // Tools
-	    //     'options-general.php', // Settings
-	    //     'separator-last', // Last separator
-	    // );
-	    return $menu_order;
+		// return array(
+		//     'index.php', // Dashboard
+		//     'separator1', // First separator
+		//     'edit.php', // Posts
+		//     'upload.php', // Media
+		//     'link-manager.php', // Links
+		//     'edit.php?post_type=page', // Pages
+		//     'edit-comments.php', // Comments
+		//     'separator2', // Second separator
+		//     'themes.php', // Appearance
+		//     'plugins.php', // Plugins
+		//     'users.php', // Users
+		//     'tools.php', // Tools
+		//     'options-general.php', // Settings
+		//     'separator-last', // Last separator
+		// );
+		return $menu_order;
 	}
 
 	function show_wp_menu_positions(){
