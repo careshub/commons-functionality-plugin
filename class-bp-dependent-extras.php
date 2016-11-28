@@ -83,7 +83,8 @@ class CC_Functionality_BP_Dependent_Extras {
 				// add_filter( 'bp_activity_set_groups_scope_args', array( $this, 'group_activity_stream_hide_activity_types' ), 12, 2 );
 		// 		g. Don't use the BP Twenty Twelve companion stylesheet.
 				add_action( 'bp_enqueue_scripts', array( $this, 'dequeue_bp_stylesheets' ), 20 );
-
+		//      h. Use the SparkPost phpmailer class if it exists.
+				add_filter( 'bp_send_email_delivery_class', array( $this, 'bp_email_use_sparkpost' ) );
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -170,6 +171,7 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 13. WP Email: Change default from and from email address.
 			add_filter( 'wp_mail_from', array( $this, 'change_wp_default_from_email_address' ) );
 			add_filter( 'wp_mail_from_name', array( $this, 'change_wp_default_from_email_name' ) );
+			add_action( 'phpmailer_init',   array( $this, 'filter_wp_mail_message' ) );
 
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
@@ -522,6 +524,15 @@ class CC_Functionality_BP_Dependent_Extras {
 		wp_dequeue_style( 'bp-child-css' );
 	}
 
+	// 1h. Use the SparkPost phpmailer class if it exists.
+	public function bp_email_use_sparkpost( $class_name ) {
+		if ( class_exists( 'BP_CC_PHPMailer' ) ) {
+			$class_name = 'BP_CC_PHPMailer';
+		}
+		return $class_name;
+	}
+
+
 	/* 2. BuddyPress Docs behavior changes
 	*****************************************************************************/
 	/**
@@ -832,6 +843,17 @@ class CC_Functionality_BP_Dependent_Extras {
 		}
 		return $email_name;
 	}
+	// Filter the content of standard WP notice emails.
+	public function filter_wp_mail_message( $phpmailer ) {
+		// BuddyPress emails are already html, so we need to leave those alone.
+		if ( strpos( $phpmailer->Body, '</td>' ) === false ) {
+			// Replaces the < & > of the 3.1 email text links
+			$phpmailer->Body = preg_replace( '#<(https?://[^*]+)>#', '$1', $phpmailer->Body );
+			// Add line breaks to the version sent to SparkPost.
+			$phpmailer->Body = nl2br( $phpmailer->Body );
+		}
+	}
+
 
 	//Testing functions
 	public function test_bp_core_fetch_avatar_filter( $output, $params, $params_item_id, $params_avatar_dir, $html_css_id, $html_width, $html_height, $avatar_folder_url, $avatar_folder_dir) {
