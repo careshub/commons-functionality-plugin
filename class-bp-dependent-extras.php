@@ -179,6 +179,12 @@ class CC_Functionality_BP_Dependent_Extras {
 			add_filter( 'wp_mail_from_name', array( $this, 'change_wp_default_from_email_name' ) );
 			add_action( 'phpmailer_init',   array( $this, 'filter_wp_mail_message' ) );
 
+		// 14. Login form changes
+			add_action( 'login_head', array( $this, 'cc_custom_login_logo' ) );
+			add_filter( 'login_headerurl', array( $this, 'change_wp_login_url' ) );
+			add_filter( 'login_headertitle', array( $this, 'change_wp_login_title' ) );
+			add_filter( 'login_message', array( $this, 'filter_lost_password_login_message' ) );
+
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
 			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
@@ -868,6 +874,56 @@ class CC_Functionality_BP_Dependent_Extras {
 		}
 	}
 
+	/* Login screen changes ***************/
+	/**
+	 * Replace the WP logo on the login screen with a CC logo.
+	 *
+	 * @since 0.2
+	 */
+	public function cc_custom_login_logo() {
+		echo "
+		<style>
+		body.login #login h1 a {
+			background: url('".get_stylesheet_directory_uri()."/img/ccommons-logo-login.png') no-repeat scroll center top transparent !important;
+			height: 90px;
+			width: 323px;
+		}
+		</style>
+		";
+	}
+
+	/**
+	 * Replace the url to WP with the CC url.
+	 *
+	 * @since 0.2
+	 */
+	public function change_wp_login_url() {
+		return get_bloginfo('url');
+	}
+
+	/**
+	 * Replace the page title.
+	 *
+	 * @since 0.2
+	 */
+	public function change_wp_login_title() {
+		return get_option('blogname');
+	}
+
+	/**
+	 * On the "lost password" screen, add a link to our cchelp doc explaining
+	 * the password reset process.
+	 *
+	 * @since 0.2
+	 */
+	public function filter_lost_password_login_message( $message ) {
+		if ( isset( $_REQUEST['action'] ) && 'lostpassword' == $_REQUEST['action'] ) {
+			$help_url = site_url( 'cchelp/i-cant-remember-my-password-or-username/' );
+			$replace = '<br /> <a href="' . $help_url  . '" target="_blank">See instructions</a> for resetting your password.</p>';
+			$message = str_replace( '</p>', $replace, $message );
+		}
+		return $message;
+	}
 
 	//Testing functions
 	public function test_bp_core_fetch_avatar_filter( $output, $params, $params_item_id, $params_avatar_dir, $html_css_id, $html_width, $html_height, $avatar_folder_url, $avatar_folder_dir) {
