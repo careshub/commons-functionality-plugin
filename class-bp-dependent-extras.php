@@ -809,7 +809,7 @@ class CC_Functionality_BP_Dependent_Extras {
 				// http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png
 				// http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-80x346.png
 				?><div class="alignright">
-					<img src="http://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png" alt="University of Missouri Extension logo" class="wp-post-image"/>
+					<img src="https://www.communitycommons.org/wp-content/uploads/2015/10/MU-Extension-Logo-70x303.png" alt="University of Missouri Extension logo" class="wp-post-image"/>
 				</div><?php
 			}
 		}
