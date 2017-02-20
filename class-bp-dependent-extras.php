@@ -186,6 +186,9 @@ class CC_Functionality_BP_Dependent_Extras {
 			add_filter( 'login_headertitle', array( $this, 'change_wp_login_title' ) );
 			add_filter( 'login_message', array( $this, 'filter_lost_password_login_message' ) );
 
+		// 15. bbPress changes
+			add_action( 'bbp_template_before_single_forum', array( $this, 'bbpress_add_new_topic_link' ) );
+
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
 			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
@@ -925,6 +928,16 @@ class CC_Functionality_BP_Dependent_Extras {
 			$message = str_replace( '</p>', $replace, $message );
 		}
 		return $message;
+	}
+
+	// 15. bbPress changes.
+	// Add a "new topic" link at the top of a forum.
+	public function bbpress_add_new_topic_link() {
+		if ( bbp_current_user_can_access_create_topic_form() ) :
+			?>
+			&emsp;<a href="#new-post">Start a new topic</a>
+			<?php
+		endif;
 	}
 
 	//Testing functions
