@@ -189,6 +189,9 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 15. bbPress changes
 			add_action( 'bbp_template_before_single_forum', array( $this, 'bbpress_add_new_topic_link' ) );
 
+		// 16. TinyMCE Editor behavior changes -- allow spans in post content.
+			add_filter('tiny_mce_before_init', array( $this, 'tiny_mce_allow_spans' ) );
+
 		// Testing
 			// add_filter( 'bp_core_fetch_avatar', array( $this, 'test_bp_core_fetch_avatar_filter' ), 10, 9 );
 			// add_filter( 'bp_legacy_theme_ajax_querystring', array( $this, 'check_querystring' ), 99, 7 );
@@ -938,6 +941,26 @@ class CC_Functionality_BP_Dependent_Extras {
 			&emsp;<a href="#new-post">Start a new topic</a>
 			<?php
 		endif;
+	}
+
+	// 16. Tiny MCE changes -- don't strip <span> elements from posts.
+ 	public function tiny_mce_allow_spans( $options ) {
+
+		if ( ! isset( $options['extended_valid_elements'] ) ) {
+			$options['extended_valid_elements'] = '';
+		} else {
+			$options['extended_valid_elements'] .= ',';
+		}
+
+		if ( ! isset( $options['custom_elements'] ) ) {
+			$options['custom_elements'] = '';
+		} else {
+			$options['custom_elements'] .= ',';
+		}
+
+		$options['extended_valid_elements'] .= 'span[class|id|style]';
+		$options['custom_elements']         .= 'span[class|id|style]';
+		return $options;
 	}
 
 	//Testing functions
