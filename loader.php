@@ -18,7 +18,6 @@ define( 'CC_FUNCTIONALITY_PLUGIN_VERSION', '0.2.0' );
  */
 function cc_functionality_buddypress_class_init(){
 	// Get the class fired up
-	require( dirname( __FILE__ ) . '/class-bp-cc-php-mailer.php' );
 	require( dirname( __FILE__ ) . '/class-bp-dependent-extras.php' );
 	$instance = CC_Functionality_BP_Dependent_Extras::get_instance();
 }

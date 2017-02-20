@@ -84,7 +84,8 @@ class CC_Functionality_BP_Dependent_Extras {
 		// 		g. Don't use the BP Twenty Twelve companion stylesheet.
 				add_action( 'bp_enqueue_scripts', array( $this, 'dequeue_bp_stylesheets' ), 20 );
 		//      h. Use the SparkPost phpmailer class if it exists.
-				add_filter( 'bp_send_email_delivery_class', array( $this, 'bp_email_use_sparkpost' ) );
+				// This version replaces the WP standard PHP Mailer class with SparkPost's
+				add_filter( 'bp_phpmailer_object', array( $this, 'bp_email_set_sp_phpmailer' ) );
 
 
 		// 	2. BuddyPress Docs behavior changes
@@ -537,13 +538,14 @@ class CC_Functionality_BP_Dependent_Extras {
 	}
 
 	// 1h. Use the SparkPost phpmailer class if it exists.
-	public function bp_email_use_sparkpost( $class_name ) {
-		if ( class_exists( 'BP_CC_PHPMailer' ) ) {
-			$class_name = 'BP_CC_PHPMailer';
+	// This version replaces the WP-standard PHP Mailer class with SparkPost's,
+	// using a filter available in BuddyPress 2.8+.
+	public function bp_email_set_sp_phpmailer( $phpmailer ) {
+		if ( class_exists( 'SparkPostHTTPMailer' ) ) {
+			$phpmailer = new SparkPostHTTPMailer();
 		}
-		return $class_name;
+		return $phpmailer;
 	}
-
 
 	/* 2. BuddyPress Docs behavior changes
 	*****************************************************************************/
