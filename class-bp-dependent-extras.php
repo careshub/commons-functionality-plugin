@@ -547,8 +547,8 @@ class CC_Functionality_BP_Dependent_Extras {
 	// This version replaces the WP-standard PHP Mailer class with SparkPost's,
 	// using a filter available in BuddyPress 2.8+.
 	public function bp_email_set_sp_phpmailer( $phpmailer ) {
-		if ( class_exists( 'SparkPostHTTPMailer' ) ) {
-			$phpmailer = new SparkPostHTTPMailer();
+		if ( class_exists( 'WPSparkPost\SparkPostHTTPMailer' ) ) {
+			$phpmailer = new WPSparkPost\SparkPostHTTPMailer();
 		}
 		return $phpmailer;
 	}
